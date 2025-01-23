@@ -28,6 +28,20 @@ jobs:
             - run: |
                 echo "Running tests"
                 mvn test
+  deploy:
+    docker:
+      - image:  cimg/node:16.10
+    steps:
+      - setup_remote_docker
+      - heroku/install
+      - checkout
+      - run:
+          name: Heroku Container Push
+          command: |
+            heroku container:login
+            heroku stack:set container -a recipe-assignment
+            heroku container:push web -a recipe-assignment
+            heroku container:release web -a recipe-assignment
 
 workflows:
   assignment_workflow:
