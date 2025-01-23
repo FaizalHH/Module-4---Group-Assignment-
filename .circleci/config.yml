@@ -60,3 +60,6 @@ workflows:
               ignore: []
             tags:
               only: /^v.*/
+      - deploy:
+          requires:
+            - build
