@@ -17,6 +17,9 @@ jobs:
             - run: |
                 echo "Install dependencies"
                 mvn clean install
+            - run: |
+                echo "Building Docker image"
+                docker build -t your-image-name .
 
   test:
     docker:
@@ -28,6 +31,26 @@ jobs:
             - run: |
                 echo "Running tests"
                 mvn test
+  
+  publish:
+    docker:
+      - image:  cimg/openjdk:17.0
+    steps:
+      - checkout
+      - setup_remote_docker # Enables Docker commands within CircleCI
+      - run:
+          name: Build Jar File
+          command: mvn clean install
+      - run:
+          name: Build Docker Image
+          command: docker build -t k3llyz/module-4-group-assignment:latest .
+      - run:
+          name: Push Docker Image to DockerHub
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker push k3llyz/module-4-group-assignment:latest
+
+
   deploy:
     docker:
       - image:  cimg/node:16.10
@@ -60,6 +83,14 @@ workflows:
               ignore: []
             tags:
               only: /^v.*/
+      - publish:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - release # Runs when merging into release
+                - main # Runs when merging into main
       - deploy:
           requires:
             - build
